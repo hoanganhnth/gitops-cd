@@ -1,0 +1,35 @@
+name: GitOps Lint & Validate
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-validate:
+    name: Helm Lint & Syntax Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.14.0
+
+      - name: Lint Generic Charts
+        run: |
+          helm lint helm/charts/microservice
+          helm lint helm/charts/web-app
+
+      - name: Validate Values Schema
+        run: |
+          python3 -c "
+import yaml
+for f in ['helm/environments/staging/values.yaml', 'helm/environments/production/values.yaml']:
+    with open(f) as fp:
+        yaml.safe_load(fp)
+    print(f'YAML syntax OK: {f}')
+"
