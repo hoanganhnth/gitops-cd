@@ -1,0 +1,14 @@
+# Centralized tracking for Mobile App release artifacts (Production)
+mobile:
+  deliveryApp:
+    name: "Customer Delivery App (Flutter)"
+    version: "1.0.0"
+    minSupportedVersion: "1.0.0"
+    latestBuildSha: "v1.0.0"
+    artifactName: "app-release.apk"
+  shipperApp:
+    name: "Shipper App (React Native)"
+    version: "1.0.0"
+    minSupportedVersion: "1.0.0"
+    latestBuildSha: "v1.0.0"
+    artifactName: "app-release.apk"
