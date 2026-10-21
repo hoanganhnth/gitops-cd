@@ -1,0 +1,56 @@
+# ArgoCD Image Updater Configuration
+# ===================================
+# Tự động poll Google Artifact Registry để phát hiện image tag mới,
+# rồi commit cập nhật vào gitops-cd → ArgoCD sync deploy.
+#
+# Cài đặt: kubectl apply -f argocd/image-updater/
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd-image-updater
+  labels:
+    app.kubernetes.io/part-of: argocd
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-image-updater-config
+  namespace: argocd-image-updater
+data:
+  # Registries configuration: GAR
+  registries.conf: |
+    registries:
+      - name: Google Artifact Registry
+        api_url: https://asia-southeast1-docker.pkg.dev
+        prefix: asia-southeast1-docker.pkg.dev
+        credentials: pullsecret:argocd-image-updater/gar-credentials
+        default: true
+
+  # Git commit settings: write-back to gitops-cd
+  git.commit-message-template: |
+    chore(image-updater): update {{.AppName}} image to {{.NewImage}}:{{.NewTag}}
+
+  # Check interval (default 2m, set to 5m for cost saving)
+  argocd-image-updater.check-interval: "5m"
+
+  # Log level
+  log.level: info
+---
+# Secret for GAR credentials (placeholder — populate via kubectl)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: gar-credentials
+  namespace: argocd-image-updater
+type: kubernetes.io/dockerconfigjson
+stringData:
+  .dockerconfigjson: |
+    {
+      "auths": {
+        "asia-southeast1-docker.pkg.dev": {
+          "username": "_json_key",
+          "password": "<REPLACE_WITH_GCP_SA_KEY_JSON_ESCAPED>"
+        }
+      }
+    }

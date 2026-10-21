@@ -1,0 +1,44 @@
+# ArgoCD Application Annotations for Image Updater
+# ==================================================
+# Thêm các annotations này vào ArgoCD Application manifest để Image Updater
+# tự động phát hiện image mới trên GAR và cập nhật tag trong gitops-cd.
+#
+# Ví dụ cho api-gateway service:
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: api-gateway
+  namespace: argocd
+  annotations:
+    # Kích hoạt Image Updater cho app này
+    argocd-image-updater.argoproj.io/image-list: >-
+      api-gateway=asia-southeast1-docker.pkg.dev/lithe-paratext-506208-s5/delivery-repo/api-gateway
+
+    # Strategy: dùng "latest" hoặc semver
+    argocd-image-updater.argoproj.io/api-gateway.update-strategy: latest
+
+    # Write back method: commit trực tiếp vào gitops-cd repo
+    argocd-image-updater.argoproj.io/write-back-method: git:secret:argocd-image-updater/git-creds
+    argocd-image-updater.argoproj.io/write-back-target: "helmvalues:helm/environments/staging/values.yaml"
+
+    # Map image tag field trong Helm values
+    argocd-image-updater.argoproj.io/api-gateway.helm.image-tag: api-gateway.image.tag
+    argocd-image-updater.argoproj.io/api-gateway.helm.image-name: api-gateway.image.repository
+
+# ---
+# Danh sách annotations cho tất cả services:
+#
+# api-gateway:
+#   argocd-image-updater.argoproj.io/image-list: api-gateway=asia-southeast1-docker.pkg.dev/lithe-paratext-506208-s5/delivery-repo/api-gateway
+#   argocd-image-updater.argoproj.io/api-gateway.helm.image-tag: api-gateway.image.tag
+#
+# auth-service:
+#   argocd-image-updater.argoproj.io/image-list: auth-service=asia-southeast1-docker.pkg.dev/lithe-paratext-506208-s5/delivery-repo/auth-service
+#   argocd-image-updater.argoproj.io/auth-service.helm.image-tag: auth-service.image.tag
+#
+# delivery-web:
+#   argocd-image-updater.argoproj.io/image-list: delivery-web=asia-southeast1-docker.pkg.dev/lithe-paratext-506208-s5/delivery-repo/delivery-web
+#   argocd-image-updater.argoproj.io/delivery-web.helm.image-tag: delivery-web.image.tag
+#
+# (Tương tự cho các services còn lại...)
